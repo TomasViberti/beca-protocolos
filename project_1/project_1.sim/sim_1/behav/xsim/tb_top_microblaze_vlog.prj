@@ -1,0 +1,10 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"../../../../../../Xilinx/Vivado/2023.1/data/files/top_microblaze.v" \
+"../../../../../../Xilinx/Vivado/2023.1/data/files/tb_top_microblaze.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

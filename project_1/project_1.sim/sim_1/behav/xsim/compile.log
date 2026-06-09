@@ -1,0 +1,6 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "D:/Xilinx/Vivado/2023.1/data/files/top_microblaze.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module top_microblaze
+INFO: [VRFC 10-2263] Analyzing Verilog file "D:/Xilinx/Vivado/2023.1/data/files/tb_top_microblaze.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module tb_top_microblaze
+INFO: [VRFC 10-2263] Analyzing Verilog file "D:/Beca/project_1/project_1.sim/sim_1/behav/xsim/glbl.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module glbl
