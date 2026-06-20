@@ -1,3 +1,6 @@
+`default_nettype none
+`timescale 1ps/1ps // Paso/resolución
+
 module top_leds_tb();
 
 localparam N_SWITCH = 4 ;
@@ -35,6 +38,19 @@ begin
 end
 
 // always #5us clock <= ~clock;
+task reset ();
+time reset_time;
+begin
+  i_reset <= 'd0;
+
+  reset_time = $urandom_range(1,100) * 1ns;
+  #reset_time;
+
+  @(posedge clock);
+
+  i_reset <= 'd1;
+end
+endtask
 
 initial
 begin
@@ -61,7 +77,7 @@ begin
 
   #100us;
 
-  $finish();
+  finish();
 end
 
 
