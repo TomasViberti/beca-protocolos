@@ -56,8 +56,27 @@ end
 endtask
 
 //----> Inclusión de tests
-`include "tests/test1_enable.sv"
-//`include "tests/test2_color_leds.sv"
-//`include "tests/test3_clock.sv"
+//`include "../tests/test1_enable.sv"
+//`include "../tests/test2_color_leds.sv"
+//`include "../tests/test3_clock.sv"
+//`include "../tests/test4_random_count_limit.sv"
+`include "../tests/test5_count_limit.sv"
+
+vio_illa 
+u_vio_illa
+(
+    .clock     (clock),
+    
+    // Le pasamos las señales que queremos espiar
+    .o_led     (o_led),
+    .o_led_b   (o_led_b),
+    .o_led_g   (o_led_g),
+    
+    // Recibimos las señales de control virtuales para nuestros multiplexores
+    .reset_vio (reset_vio),
+    .selMux    (selMux),
+    .sw_vio    (sw_vio)
+);
 
 endmodule
+
