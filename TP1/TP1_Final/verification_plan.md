@@ -26,4 +26,5 @@ Test Plan:
 
 Tip: Para verificación no hay una regla para utilizar tipeo bloqueante o no bloqueante. Esas reglas se siguen en diseño.
 
+Si estoy testeando en caja negra, debo poder verificar con las salidas de mi sistema. De este modo no es recomendable usar las variables internas para verificar comportamiento, por ejemplo el counter interno.
 

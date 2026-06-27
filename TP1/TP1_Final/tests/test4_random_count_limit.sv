@@ -10,11 +10,11 @@ initial begin
     force u_top_leds.u_counter.limit_2   = 32'h0000_0040;
     force u_top_leds.u_counter.limit_3   = 32'h0000_0080;
 
-    // Cambiamos el nombre de la variable para evitar shadowing
+    //-----> Ciclo de iteraciones del test
     for (int j = 0; j < 100; j = j + 1) 
     begin
         
-        // -----> Inicialización de variables sincrónica
+        // -----> Inicialización de variables 
         @(posedge clock);
         i_sw[0]   = 1'b0; 
         i_sw[2:1] = $urandom_range(0,3);
@@ -36,12 +36,13 @@ initial begin
         i_sw[0] = 1'b1;
         
         // Bucle de validación ciclo a ciclo
-        for (int i = 0; i < expected_limit; i = i + 1)
+        for (int i = 0; i <= expected_limit; i = i + 1)
         begin
             
-            // -----> Evaluamos el estado actual
+            // -----> Esperamos un momento
             #1; 
-
+            
+            // -----> Evaluamos el estado actual
             if(u_top_leds.u_counter.counter != i) 
             begin
                 $display("ERROR: Contador = %0d, Esperado = %0d a los %0t ns", u_top_leds.u_counter.counter, i, $time);
@@ -52,7 +53,7 @@ initial begin
         end
 
         #1;
-        if(u_top_leds.u_counter.counter > expected_limit) begin
+        if(u_top_leds.u_counter.counter != 0) begin
             $display("ERROR: El contador pasó el limite");
             $finish(2);
         end

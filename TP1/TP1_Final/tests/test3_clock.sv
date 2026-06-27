@@ -24,16 +24,16 @@ begin
         //-----> Habilitamos contador para que las luces vayan cambiando
         i_sw[0] = 'd1;
 
-        //-----> Esperamos un momento corto y visualizable (ej: 1 a 5 microsegundos)
+        //-----> Esperamos un momento corto y visualizable 
         #($urandom_range(1,5) * 1000);
 
         //-----> CAÍDA DEL RELOJ: Apagamos el generador de clock
-        force clock = 'd1;
+        force clock = 'd0;
 
         // Guardamos el estado actual
         prev_o_led = o_led;
 
-        // Esperamos un momento corto pero notorio sin reloj (ej: 10 a 20 us)
+        // Esperamos un momento corto pero notorio
         #($urandom_range(10,20) * 1000);
 
         //-----> Verificación
@@ -44,7 +44,7 @@ begin
             $finish(2);
         end
 
-        //-----> Devolvemos el clock a su estado natural
+        //-----> Devolvemos el clock a su estado original
         release clock;
     end
 
