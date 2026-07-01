@@ -20,8 +20,10 @@ Test Plan:
 5- Test de cambio de color de leds.
    
 6- Test reset.
+	Verificar en caja negra que, al activar el reset asincronico, el patron de leds vuelve al estado inicial y el color sigue a i_switch[3] sin usar registros internos.
 
 7- Test de randomizar todos los componentes.
+	Randomizar enable, selectores, color, reset y pausas de clock, validando solo invariantes observables: patron one-hot, color coherente y estabilidad con clock detenido.
 
 
 Tip: Para verificación no hay una regla para utilizar tipeo bloqueante o no bloqueante. Esas reglas se siguen en diseño.

@@ -40,7 +40,7 @@ initial begin
             i_sw[0] = 1'b1;
             
             // -----> Verificación
-            for (int e = 0; e < expected_limit;e = e + 1) 
+            for (int e = 0; e <= expected_limit;e = e + 1) 
             begin
                 
                 // Se espera un pequeño momento
@@ -59,7 +59,7 @@ initial begin
             
             //-----> Esperamos un momento para que se ponga en 0 el counter
             #1;
-            if(u_top_leds.u_counter.counter > expected_limit) 
+            if(u_top_leds.u_counter.counter != 0) 
             begin
                 $display("ERROR (Iter %0d, Límite %0d): El contador llego al limite pero no reinicio a 0.", j, i);
                 $finish(2);
@@ -67,7 +67,7 @@ initial begin
         end
     end
 
-    $display("TEST PASSED");
+    $display("TEST PASSED: Los limites funcionan de manera correcta");
     $finish();
 end
 `endif

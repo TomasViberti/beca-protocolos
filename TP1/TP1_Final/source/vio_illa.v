@@ -1,27 +1,35 @@
+`timescale 1ns / 1ps
+
 module vio_illa (
+    // Puertos de reloj y observación (Entradas al wrapper)
     input  wire        clock,
-    // Entradas desde el Top para espiar con el ILA
     input  wire [3:0]  o_led,
     input  wire [3:0]  o_led_b,
     input  wire [3:0]  o_led_g,
     
-    // Salidas virtuales desde el VIO hacia el multiplexor del Top
+    // Puertos de control virtual (Salidas del wrapper)
     output wire        reset_vio,
     output wire        selMux,
     output wire [3:0]  sw_vio
 );
 
-    vio u_vio (
-        .clk          (clock),
-        .probe_out0   (reset_vio), // Genera el reset virtual
-        .probe_out1   (selMux),    // Genera el selector del multiplexor
-        .probe_out2   (sw_vio)     // Genera los switches virtuales
+
+    // Instancia del IP Core VIO (Virtual Input/Output)
+    vio 
+    u_vio 
+    (
+        .clk_0          (clock),
+        .probe_out0_0  (reset_vio), 
+        .probe_out1_0 (selMux),    
+        .probe_out2_0   (sw_vio)     
     );
 
-    ila u_ila (
-        .clk          (clock),
-        // Concatenamos las 3 salidas de 4 bits en un bus de 12 bits
-        .probe0       ({o_led_g, o_led_b, o_led}) 
+    // Instancia del IP Core ILA (Integrated Logic Analyzer)
+    ila 
+    u_ila 
+    (
+        .clk_0          (clock),
+        .probe0_0       ( {o_led_g, o_led_b, o_led} ) 
     );
 
 endmodule
