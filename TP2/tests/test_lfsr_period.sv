@@ -26,6 +26,8 @@ begin
 	// Iteramos por la cantidad de steps
 	// Consultar si es necesario iterar 100 veces todo lo de abajo, porque ya con la cantidad de combinaciones
     // hay muchas iteraciones
+
+	// Debemos verificar la salida del LFSR con una señal o_valid, CAMBIAR
 	for (integer i = 0; i < NB_LFSR_STEPS; i = i + 1)
 	begin
 		@(posedge clk);

@@ -27,6 +27,7 @@ begin
         #1;
         initial_state = o_lfsr;
 
+        // Debemos verificar la salida del LFSR con una señal o_valid, CAMBI
         if (initial_state != random_seed)
         begin
             $display("ERROR: La seed cargada no coincide con la seed observada en salida.");
