@@ -63,7 +63,7 @@ module tb_lfsr_fibonacci;
     endtask
 
     // Inclusión de tests
-    `include "../tests/test_lfsr_period.v"
-    //`include "../tests/test_lfsr_period_random_seed.v"
+    //`include "../tests/test_lfsr_period.sv"
+    `include "../tests/test_lfsr_perior_random_seed.sv"
 
 endmodule

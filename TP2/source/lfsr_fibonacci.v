@@ -7,7 +7,7 @@ module lfsr_fibonacci#(
     input  wire       i_rst,         // Reset asincrónico
     input  wire       i_valid,       // Habilitador para calcular
     input  wire [15:0] i_seed,       // Seed ingresada por puerto
-    output reg  [15:0] o_lfsr        // Salida del lfsr
+    output wire [15:0] o_lfsr        // Salida del lfsr
 );   
 
 // Registro para el estado actual del LFSR

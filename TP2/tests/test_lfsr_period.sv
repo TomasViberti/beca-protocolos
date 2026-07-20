@@ -9,10 +9,10 @@ reg [15:0] initial_state;
 initial
 begin
 	// Inicializamos las variables
-	i_rst        = 1'b0;
-	i_soft_reset = 1'b0;
-	i_valid      = 1'b0;
-	i_seed       = 16'h0001;
+	i_rst        <= 1'b0;
+	i_soft_reset <= 1'b0;
+	i_valid      <= 1'b0;
+	i_seed       <= 16'h0001;
 
 	// Llamamos a la task reset
 	reset();
@@ -20,8 +20,8 @@ begin
 	#1ns;
 
 	// Guardamos el estado inicial de la salida del lfsr
-	initial_state = o_lfsr;
-	i_valid = 1'b1;
+	initial_state <= o_lfsr;
+	i_valid <= 1'b1;
 
 	// Iteramos por la cantidad de steps
 	// Consultar si es necesario iterar 100 veces todo lo de abajo, porque ya con la cantidad de combinaciones
@@ -45,7 +45,7 @@ begin
 	end
 
 	// Desactivamos la señal habilitadora
-	i_valid = 1'b0;
+	i_valid <= 1'b0;
 	#1ns;
 
 	// Verificamos si al volver a iniciar vuelve al estado inicial
