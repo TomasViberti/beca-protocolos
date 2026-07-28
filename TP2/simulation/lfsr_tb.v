@@ -9,6 +9,12 @@ module tb_lfsr_fibonacci;
     reg i_valid;         // Habilitador aleatorio
     reg [15:0] i_seed;
     wire [15:0] o_lfsr;
+    wire [15:0] checker_i_lfsr;
+    wire        o_lock;
+
+    reg         checker_inject_invalid;
+    reg [15:0]  checker_inject_value;
+    reg         o_lock_prev;
 
     // Instancia del módulo
     lfsr_fibonacci 
@@ -21,9 +27,40 @@ module tb_lfsr_fibonacci;
         .o_lfsr(o_lfsr)
     );
 
+    // Instancia del checker
+    lfsr_checker
+    u_lfsr_checker (
+        .clk(clk),
+        .i_rst(i_rst),
+        .i_soft_reset(i_soft_reset),
+        .i_valid(i_valid),
+        .i_seed(i_seed),
+        .i_lfsr(checker_i_lfsr),
+        .o_lock(o_lock)
+    );
+
+    assign checker_i_lfsr = checker_inject_invalid ? checker_inject_value : o_lfsr;
+
     // Clock 10MHz (T = 100ns)
     initial clk = 0;
     always #50 clk = ~clk;
+
+    // Monitoreo del estado de lock del checker
+    task monitor_o_lock;
+        begin
+            o_lock_prev = 1'b0;
+
+            forever begin
+                @(posedge clk);
+                #1;
+
+                if (o_lock !== o_lock_prev) begin
+                    $display("INFO: o_lock cambio a %b en %0t", o_lock, $time);
+                    o_lock_prev = o_lock;
+                end
+            end
+        end
+    endtask
 
     // Task para reset asincrónico (tiempo entre 1us y 250us)
     task reset;
@@ -31,6 +68,8 @@ module tb_lfsr_fibonacci;
         begin
             i_valid = 1'b0;
             i_soft_reset = 1'b0;
+            checker_inject_invalid = 1'b0;
+            checker_inject_value = 16'h0000;
             i_rst = 1;
             reset_time = $urandom_range(1000, 250000);
             #reset_time;
@@ -44,6 +83,7 @@ module tb_lfsr_fibonacci;
     task soft_reset;
         begin
             i_valid = 1'b0;
+            checker_inject_invalid = 1'b0;
             @(posedge clk);
             i_soft_reset = 1;
             #($urandom_range(1000, 250000));
@@ -62,8 +102,18 @@ module tb_lfsr_fibonacci;
         end
     endtask
 
+    initial begin
+        o_lock_prev = 1'b0;
+        fork
+            monitor_o_lock();
+        join_none
+    end
+
     // Inclusión de tests
-    //`include "../tests/test_lfsr_period.sv"
-    `include "../tests/test_lfsr_perior_random_seed.sv"
+        `include "../tests/test_lfsr_checker3.sv"
+        //`include "../tests/test_lfsr_checker4.sv"
+        //`include "../tests/test_lfsr_checker5.sv"
+        //`include "../tests/test_lfsr_checker6.sv"
+        //`include "../tests/test_lfsr_checker7.sv"
 
 endmodule

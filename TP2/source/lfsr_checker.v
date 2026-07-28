@@ -1,91 +1,104 @@
-module lfsr_checker#(
-    parameter [15:0] FIXED_SEED = 16'b1
+module lfsr_checker #(
+    parameter [15:0] FIXED_SEED        = 16'hFFFF,
+    parameter integer LOCK_THRESHOLD   = 5,
+    parameter integer UNLOCK_THRESHOLD = 3
 )
 (
     input  wire        clk,
-    input  wire        i_soft_reset,
-    input  wire        i_rst,
-    input  wire        i_valid,
-    input  wire [15:0] i_seed,
-    input  wire [15:0] i_lfsr,
-    output reg         o_lock
+    input  wire        i_rst,         // Reset asincrónico 
+    input  wire        i_soft_reset,  // Reset sincrónico 
+    input  wire        i_valid,       // Habilitador de cálculo (Clock Enable)
+    input  wire [15:0] i_seed,        // Semilla externa dinámica
+    input  wire [15:0] i_lfsr,        // Combinación obtenida del LFSR
+    output wire        o_lock         // Estado de sincronización del enlace
 );
 
-// Valores limites para cambiar el estado del checker.
-localparam integer LOCK_THRESHOLD   = 5;
-localparam integer UNLOCK_THRESHOLD = 3;
+    // Estado que el checker espera que tenga el LFSR
+    reg [15:0] model_state;
+    
+    // Contadores 
+    reg [3:0]  valid_count;
+    reg [3:0]  invalid_count;
+    
+    // Registro que representa el estado de lockeado, es decir
+    // cuando el checker y el LFSR están sincronizados
+    reg        lock_reg;
 
-// Estado interno del modelo de referencia.
-reg [15:0] model_state;
+    // Cable para el feedback del LFSR
+    wire       feedback;
+    assign feedback = model_state[1] ^ model_state[2] ^ model_state[4] ^ model_state[15];
 
-// Conteo de aciertos consecutivos.
-reg [2:0]  valid_count;
-
-// Conteo de errores consecutivos.
-reg [1:0]  invalid_count;
-
-// Task que calcula el siguiente valor esperado del LFSR.
-task [15:0] next_lfsr;
-    input [15:0] state;
+    always @(posedge clk or posedge i_rst) 
     begin
-        next_lfsr[0]    = state[1] ^ state[2] ^ state[4] ^ state[15];
-        next_lfsr[15:1] = state[14:0];
-    end
-endtask
 
-always @(posedge clk or posedge i_rst)
-begin
-    if (i_rst)
-    begin
-        // Con reset asíncrono volvemos a la seed fija y despejamos el bloqueo.
-        model_state   <= FIXED_SEED;
-        valid_count   <= 3'd0;
-        invalid_count <= 2'd0;
-        o_lock        <= 1'b0;
-    end
-    else if (i_soft_reset)
-    begin
-        // Con soft reset cargamos la seed externa y reiniciamos los contadores.
-        model_state   <= i_seed;
-        valid_count   <= 3'd0;
-        invalid_count <= 2'd0;
-        o_lock        <= 1'b0;
-    end
-    else if (i_valid)
-    begin
-        // Comparación contra el siguiente estado esperado del generador.
-        if (i_lfsr == next_lfsr(model_state))
+        if (i_rst)
         begin
-            model_state   <= i_lfsr;
-            invalid_count <= 2'd0;
+            model_state   <= FIXED_SEED;
+            valid_count   <= 4'd0;
+            invalid_count <= 4'd0;
+            lock_reg      <= 1'b0; // Inicia en estado deslockeado
+        end
 
-            // El checker se bloquea después de 5 valores válidos consecutivos.
-            if (valid_count == LOCK_THRESHOLD - 1)
+        else if (i_soft_reset) begin
+            model_state   <= i_seed;
+            valid_count   <= 4'd0;
+            invalid_count <= 4'd0;
+            lock_reg      <= 1'b0;
+        end
+
+        else if (i_valid) begin
+            // Evaluación ciclo a ciclo contra el flujo entrante
+            if (i_lfsr == model_state) 
             begin
-                o_lock      <= 1'b1;
-                valid_count <= valid_count;
-            end
-            else
-            begin
-                valid_count <= valid_count + 1'b1;
+                // Coincidencia: Dato válido
+                // Se asigna el feedback (próximo estado esperado) al model state
+                model_state   <= {model_state[14:0], feedback};
+                invalid_count <= 4'd0; // Se resetea la cuenta de errores consecutivos
+                
+                // Si lock_reg = 0, es decir, no está lockeado
+                if (!lock_reg) 
+
+                // Se realiza la lógica para lockear o sumar uno a la cuenta de aciertos
+                // consecutivos, según corresponda
+                begin
+                    // Si la cuenta es igual al threshold de lockeo, se lockea
+                    if (valid_count == LOCK_THRESHOLD - 1'b1) 
+                    begin
+                        lock_reg    <= 1'b1; // Bloquea tras N aciertos, o sea, lock_reg = 1
+                        valid_count <= 4'd0; // Se resetea la cuenta de aciertos consecutivos
+                    end 
+                    // Si la cuenta no es igual al threshold de lockeo, se suma uno a valid_count
+                    else begin
+                        valid_count <= valid_count + 1'b1;
+                    end
+                end
+            end 
+            
+            // Si no coinciden la informacion entrante del LFSR con el model state del checker
+            else begin
+                // El modelo absorbe el dato "corrupto" del canal
+                model_state   <= {i_lfsr[14:0], (i_lfsr[1] ^ i_lfsr[2] ^ i_lfsr[4] ^ i_lfsr[15])};
+                valid_count   <= 4'd0; // Resetea aciertos consecutivos
+                
+                // Si el checker estaba en estado de lock
+                if (lock_reg) 
+                begin
+                    // En caso de que la cuenta de no-aciertos consecutivos sea igual a UNLOCK_THRESHOLD
+                    if (invalid_count == UNLOCK_THRESHOLD - 1'b1) 
+                    begin
+                        lock_reg      <= 1'b0; // Desbloquea tras M errores, es decir, se pone lock_reg = 0
+                        invalid_count <= 4'd0; // Reseteo cuenta de no-aciertos
+                    end 
+                    // Si la cuenta de no-aciertos es menor al UNLOCK_THRESHOLD
+                    else begin
+                        invalid_count <= invalid_count + 1'b1; // Sumo uno a la cuenta
+                    end
+                end
             end
         end
-        else
-        begin
-            valid_count <= 3'd0;
-
-            // El checker se desbloquea después de 3 valores inválidos consecutivos.
-            if (invalid_count == UNLOCK_THRESHOLD - 1)
-            begin
-                o_lock        <= 1'b0;
-                invalid_count <= invalid_count;
-            end
-            else
-            begin
-                invalid_count <= invalid_count + 1'b1;
-            end
-        end
     end
-end
+
+    // El valor de lock_reg lo asigno a o_lock a modo de bandera
+    assign o_lock = lock_reg;
 
 endmodule
