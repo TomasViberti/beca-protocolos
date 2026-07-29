@@ -41,7 +41,6 @@ begin
             if (seen_lock && !o_lock)
             begin
                 $display("ERROR: o_lock Se desbloqueó mientras había tráfico sincronizado");
-                $display("Step: %0d", i + 1);
                 $display("TEST FAILED");
                 $finish(2);
             end
