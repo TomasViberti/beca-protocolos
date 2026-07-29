@@ -110,10 +110,10 @@ module tb_lfsr_fibonacci;
     end
 
     // Inclusión de tests
-        `include "../tests/test_lfsr_checker3.sv"
+        //`include "../tests/test_lfsr_checker3.sv"
         //`include "../tests/test_lfsr_checker4.sv"
         //`include "../tests/test_lfsr_checker5.sv"
         //`include "../tests/test_lfsr_checker6.sv"
-        //`include "../tests/test_lfsr_checker7.sv"
+        `include "../tests/test_lfsr_checker7.sv"
 
 endmodule

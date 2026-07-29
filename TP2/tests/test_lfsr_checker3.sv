@@ -4,7 +4,6 @@
 
 localparam integer NB_LFSR_STEPS = 65535;
 
-integer i;
 reg seen_lock;
 
 initial
@@ -20,37 +19,46 @@ begin
     load_seed(16'h0001);
     soft_reset();
 
-    // Test 3: valid traffic for one full period must lock and stay locked.
+    // Test destinado a verificar que ante un periodo de tiempo se lockee el sistema como es esperado.
     seen_lock = 1'b0;
     i_valid = 1'b1;
     checker_inject_invalid = 1'b0;
 
-    for (i = 0; i < NB_LFSR_STEPS; i = i + 1)
+    // Se itera el test 10 veces pues la cantidad de steps del LFSR ya es extensa
+    for (integer j = 0; j < 10; j = j + 1)
     begin
-        @(posedge clk);
-        #1;
+        for (integer i = 0; i < NB_LFSR_STEPS; i = i + 1)
+        begin
+            @(posedge clk);
+            #1;
 
-        if (o_lock)
+            // Si la bandera de lock está activa registro en la bandera seen_lock dicho evento
+            if (o_lock)
             seen_lock = 1'b1;
 
-        if (seen_lock && !o_lock)
+            // Si en algún momento difieren las banderas, falla el test porque sigue habiendo tráfico sincronizado
+            // y no deberían cambiar las banderas.
+            if (seen_lock && !o_lock)
+            begin
+                $display("ERROR: o_lock Se desbloqueó mientras había tráfico sincronizado");
+                $display("Step: %0d", i + 1);
+                $display("TEST FAILED");
+                $finish(2);
+            end
+        end
+
+        // Si nunca se puso en uno la variable seen_lock es porque el checker no funciona y falla el test
+        if (!seen_lock)
         begin
-            $display("ERROR: o_lock unlocked while valid traffic was maintained.");
-            $display("Step: %0d", i + 1);
+            $display("ERROR: o_lock nunca se lockeó durante tráfico sincronizado");
             $display("TEST FAILED");
             $finish(2);
         end
-    end
 
-    if (!seen_lock)
-    begin
-        $display("ERROR: o_lock never locked during valid traffic.");
-        $display("TEST FAILED");
-        $finish(2);
+        $display("TEST PASSED");
+        $finish();
     end
-
-    $display("TEST PASSED");
-    $finish();
+    
 end
 
 `endif

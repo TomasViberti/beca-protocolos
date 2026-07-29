@@ -2,10 +2,8 @@
 
 `ifdef TEST7
 
-localparam integer NB_RANDOM_RESETS = 3;
+localparam NB_LFSR_STEPS = 65535;
 
-integer i;
-integer j;
 reg seen_lock;
 
 initial
@@ -25,32 +23,37 @@ begin
     i_valid = 1'b1;
     checker_inject_invalid = 1'b0;
 
-    for (i = 0; i < NB_RANDOM_RESETS; i = i + 1)
-    begin
-        repeat($urandom_range(2, 12))
+    for (integer i = 0; i < 100; i = i + 1)
+    begin  
+        // Se espera un numero aleatorio de ciclos con tráfico normal
+        repeat($urandom_range(1, NB_LFSR_STEPS))
         begin
             @(posedge clk);
             #1;
         end
 
+        // Se inyecta un reset sincrónico con una semilla aleatoria
         i_seed = $urandom_range(1, 16'hFFFF);
         soft_reset();
         i_valid = 1'b1;
         checker_inject_invalid = 1'b0;
 
+        // El sistema debe lockearse nuevamente despues de un numero aleatorio de ciclos mayor o igual a 5
         seen_lock = 1'b0;
-        for (j = 0; j < 10; j = j + 1)
+        for (integer j = 0; j < $urandom_range(5, 500); j = j + 1)
         begin
             @(posedge clk);
             #1;
 
+            // Si el sistema se volvió a lockear lo registro en la bandera del test
             if (o_lock)
                 seen_lock = 1'b1;
         end
 
+        // Si tras un numero aleatorio entre 5 y 500 ciclos el checker no se volvió a lockear, el test falla
         if (!seen_lock)
         begin
-            $display("ERROR: o_lock did not relock after a random reset.");
+            $display("ERROR: No se lockeó despues de un reset random");
             $display("TEST FAILED");
             $finish(2);
         end
