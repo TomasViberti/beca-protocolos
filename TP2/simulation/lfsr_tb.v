@@ -16,6 +16,14 @@ module tb_lfsr_fibonacci;
     reg [15:0]  checker_inject_value;
     reg         o_lock_prev;
 
+    localparam integer CHECKER_LOCK_THRESHOLD   = 5;
+    localparam integer CHECKER_UNLOCK_THRESHOLD = 3;
+
+    reg [15:0] exp_model_state;
+    reg [3:0]  exp_valid_count;
+    reg [3:0]  exp_invalid_count;
+    reg        exp_lock;
+
     // Instancia del módulo
     lfsr_fibonacci 
     u_lfsr_fibonacci (
@@ -110,10 +118,14 @@ module tb_lfsr_fibonacci;
     end
 
     // Inclusión de tests
-        //`include "../tests/test_lfsr_checker3.sv"
-        //`include "../tests/test_lfsr_checker4.sv"
-        //`include "../tests/test_lfsr_checker5.sv"
-        //`include "../tests/test_lfsr_checker6.sv"
-        `include "../tests/test_lfsr_checker7.sv"
+    
+    //`include "../tests/test_lfsr_period.sv"
+    `include "../tests/test_lfsr_perior_random_seed.sv"
+    //`include "../tests/test_lfsr_checker3.sv"
+    //`include "../tests/test_lfsr_checker4.sv"
+    //`include "../tests/test_lfsr_checker5.sv"
+    //`include "../tests/test_lfsr_checker6.sv"
+    //`include "../tests/test_lfsr_checker7.sv"
+    //`include "../tests/test_lfsr_checker8.sv"
 
 endmodule

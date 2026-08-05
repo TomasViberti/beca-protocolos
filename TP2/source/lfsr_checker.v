@@ -28,6 +28,12 @@ module lfsr_checker #(
     wire       feedback;
     assign feedback = model_state[1] ^ model_state[2] ^ model_state[4] ^ model_state[15];
 
+    // Estados candidatos para el próximo ciclo.
+    wire [15:0] internal_next_state;
+    wire [15:0] absorbed_next_state;
+    assign internal_next_state  = {model_state[14:0], feedback};
+    assign absorbed_next_state  = {i_lfsr[14:0], (i_lfsr[1] ^ i_lfsr[2] ^ i_lfsr[4] ^ i_lfsr[15])};
+
     always @(posedge clk or posedge i_rst) 
     begin
 
@@ -52,7 +58,7 @@ module lfsr_checker #(
             begin
                 // Coincidencia: Dato válido
                 // Se asigna el feedback (próximo estado esperado) al model state
-                model_state   <= {model_state[14:0], feedback};
+                model_state   <= internal_next_state;
                 invalid_count <= 4'd0; // Se resetea la cuenta de errores consecutivos
                 
                 // Si lock_reg = 0, es decir, no está lockeado
@@ -76,8 +82,14 @@ module lfsr_checker #(
             
             // Si no coinciden la informacion entrante del LFSR con el model state del checker
             else begin
-                // El modelo absorbe el dato "corrupto" del canal
-                model_state   <= {i_lfsr[14:0], (i_lfsr[1] ^ i_lfsr[2] ^ i_lfsr[4] ^ i_lfsr[15])};
+                // Si está lockeado, el modelo sigue avanzando con su propio feedback
+                // para mantener el efecto Flywheel. Si no lo está, absorbe el dato
+                // entrante para intentar resincronizarse.
+                if (lock_reg)
+                    model_state <= internal_next_state;
+                else
+                    model_state <= absorbed_next_state;
+
                 valid_count   <= 4'd0; // Resetea aciertos consecutivos
                 
                 // Si el checker estaba en estado de lock
@@ -93,6 +105,9 @@ module lfsr_checker #(
                     else begin
                         invalid_count <= invalid_count + 1'b1; // Sumo uno a la cuenta
                     end
+                end
+                else begin
+                    invalid_count <= 4'd0;
                 end
             end
         end
